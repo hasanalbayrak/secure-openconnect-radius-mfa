@@ -1,0 +1,9 @@
+{
+    "jdoe": {
+        "name": "John",
+        "surname": "DOE",
+        "companyName": "ACME Corp",
+        "phone": "905551234567",
+        "password": "$2b$12$EXAMPLE_BCRYPT_HASH_STRING..."
+    }
+}

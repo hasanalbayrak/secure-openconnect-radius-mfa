@@ -1,0 +1,49 @@
+services:
+  vpn:
+    build: ./vpn
+    container_name: vpn_server
+    restart: always
+    privileged: true
+    ports:
+      - "443:4443"
+      - "443:4443/udp"
+    env_file:
+      - .env
+    volumes:
+      - ./vpn/entrypoint.sh:/entrypoint.sh
+      - vpn_data:/etc/ocserv
+    entrypoint: [ "/entrypoint.sh" ]
+    depends_on:
+      - radius
+    networks:
+      vpn_net:
+        ipv4_address: 172.21.0.3
+
+  radius:
+    build: ./radius
+    container_name: vpn_radius
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      # Configuration Files
+      - ./radius/clients.conf:/etc/raddb/clients.conf
+      - ./radius/python3.conf:/etc/raddb/mods-enabled/python3
+      - ./radius/default_site:/etc/raddb/sites-available/default
+      # Data & Scripts
+      - ./radius/users.json:/etc/raddb/users.json
+      - ./radius/scripts/mfa_handler.py:/etc/raddb/mods-config/python3/mfa_handler.py
+    networks:
+      vpn_net:
+        ipv4_address: 172.21.0.2
+
+volumes:
+  vpn_data:
+
+
+networks:
+  vpn_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

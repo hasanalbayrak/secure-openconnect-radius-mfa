@@ -1,0 +1,60 @@
+server default {
+    listen {
+        type = auth
+        ipaddr = *
+        port = 1812
+        limit {
+            max_connections = 16
+            lifetime = 0
+            idle_timeout = 30
+        }
+    }
+    listen {
+        ipaddr = *
+        port = 1813
+        type = acct
+    }
+
+    authorize {
+        filter_username
+        
+        # Call the Python module for authorization logic
+        python3
+        
+        # If Python returns 'updated', it means an OTP was sent.
+        # We must trigger an Access-Challenge response.
+        if (updated) {
+            update control {
+                Response-Packet-Type := Access-Challenge
+            }
+            handled
+        }
+        else {
+            # Otherwise, proceed to authentication phase
+            update control {
+                Auth-Type := python3
+            }
+        }
+    }
+
+    authenticate {
+        Auth-Type python3 {
+            python3
+        }
+    }
+
+    preacct {
+        preprocess
+    }
+    accounting {
+        detail
+    }
+    session {
+        radutmp
+    }
+    post-auth {
+        Post-Auth-Type REJECT {
+            attr_filter.access_reject
+        }
+    }
+}
