@@ -32,7 +32,7 @@ An enterprise-grade, dockerized VPN solution utilizing **OpenConnect (ocserv)** 
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/your-org/secure-vpn-radius.git](https://github.com/your-org/secure-vpn-radius.git)
+https://github.com/hasanalbayrak/secure-openconnect-radius-mfa.git
 cd secure-vpn-radius
 ```
 
@@ -40,6 +40,40 @@ cd secure-vpn-radius
 Create a ```.env``` file from the example and populate it with your credentials.
 ```bash
 cp .env.example .env
-vi .env
 ```
 Ensure you configure the ```RADIUS_SECRET``` and SMS API credentials accurately.
+
+### 3. User Configuration
+Copy the user database example.
+```bash
+cp radius/users.json.example radius/users.json
+```
+**Security Note:** Passwords must be hashed using BCrypt. Do not store plain-text passwords.
+
+#### Generating a Password Hash
+
+To generate a BCrypt hash without installing local dependencies, run the following command within the Docker environment:
+```bash
+docker compose run --rm radius python3 -c "import bcrypt; p = input('Enter Password: '); print(bcrypt.hashpw(p.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'))"
+```
+Copy the output hash (starting with ```$2b$...```) into your ```users.json``` file.
+
+### 4. Deployment
+
+Build and start the services.
+```bash
+docker compose up -d -build
+```
+
+## Network Configuration
+* VPN Client Subnet: ```10.10.10.0/24```
+* Internal Management Network: ```172.21.0.0/16```
+* VPN Gateway IP: ```172.21.0.1```
+
+VPN clients are routed to access services running on the ```172.21.0.0/16``` subnet securely.
+
+## Logs & Troubleshooting
+View logs for the Radius service to debug authentication issues. PII is masked by default.
+
+## License
+This project is licensed under the MIT License.
